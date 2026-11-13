@@ -49,3 +49,4 @@ No build step, Node.js server, or package installation is required:
 ## 📄 License
 
 MIT License. Open for personal and commercial inventory management.
+
