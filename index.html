@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MallPilot - Shopping Mall Inventory Tracker</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- App Layout Container -->
+  <div class="app-layout">
+    
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <i data-lucide="store"></i>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">MallPilot</span>
+            <span class="brand-subtitle">Mall Central Inventory</span>
+          </div>
+        </div>
+        <button class="mobile-close-btn" id="mobile-close-btn" aria-label="Close sidebar">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main Navigation</div>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <button class="nav-link active" id="nav-all-items">
+              <i data-lucide="layout-grid"></i>
+              <span>All Mall Inventory</span>
+              <span class="nav-badge" id="nav-total-badge">0</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="nav-low-stock">
+              <i data-lucide="alert-triangle"></i>
+              <span>Low Stock Alerts</span>
+              <span class="nav-badge warning" id="nav-low-stock-badge">0</span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="nav-section-label">Mall Categories</div>
+        <ul class="nav-list" id="sidebar-categories-list">
+          <!-- Dynamic category quick links populated by JS -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sync-status">
+          <span class="status-indicator"></span>
+          <div class="status-details">
+            <span class="status-title">Browser Storage Active</span>
+            <span class="status-sub">Auto-saved to localStorage</span>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button class="btn-sidebar-action" id="btn-seed-data" title="Load sample shopping mall items">
+            <i data-lucide="refresh-cw"></i>
+            <span>Reset Mall Demo Data</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="menu-toggle-btn" id="menu-toggle-btn" aria-label="Toggle navigation menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="header-titles">
+            <h1 class="page-title">Mall Inventory Dashboard</h1>
+            <p class="page-subtitle">Track, manage and audit stock across mall levels, stores and facilities</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-primary" id="open-add-modal-btn">
+            <i data-lucide="plus"></i>
+            <span>Add New Item</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Scrollable Dashboard Content -->
+      <main class="main-content">
+
+        <!-- Stat Cards Section -->
+        <section class="stats-section" aria-label="Inventory Statistics">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Unique Items</span>
+              <div class="stat-icon-wrapper">
+                <i data-lucide="package"></i>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-total-items">0</div>
+            <div class="stat-meta">Active mall stock records</div>
+          </div>
+
+          <div class="stat-card" id="stat-card-low-stock">
+            <div class="stat-header">
+              <span class="stat-label">Low Stock Warnings</span>
+              <div class="stat-icon-wrapper warning">
+                <i data-lucide="alert-triangle"></i>
+              </div>
+            </div>
+            <div class="stat-value text-warning" id="stat-low-stock-count">0</div>
+            <div class="stat-meta">Quantity below 10 units</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Physical Units</span>
+              <div class="stat-icon-wrapper">
+                <i data-lucide="layers"></i>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-total-units">0</div>
+            <div class="stat-meta">Combined stock in mall</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Active Categories</span>
+              <div class="stat-icon-wrapper">
+                <i data-lucide="tags"></i>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-categories-count">0</div>
+            <div class="stat-meta">Mall classification groups</div>
+          </div>
+        </section>
+
+        <!-- Controls: Search, Filter, Sort, Reset -->
+        <section class="controls-card">
+          <div class="controls-grid">
+            
+            <!-- Search Input -->
+            <div class="control-group search-group">
+              <label for="search-input" class="sr-only">Search items</label>
+              <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input 
+                  type="text" 
+                  id="search-input" 
+                  class="form-control search-input" 
+                  placeholder="Search item (e.g., Television, Blender, Dove Soap), category..." 
+                  autocomplete="off"
+                >
+                <button class="clear-search-btn hidden" id="clear-search-btn" aria-label="Clear search">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Category Filter Dropdown -->
+            <div class="control-group">
+              <label for="category-filter" class="control-label">Category</label>
+              <div class="select-wrapper">
+                <select id="category-filter" class="form-control form-select">
+                  <option value="all">All Categories</option>
+                  <!-- Populated dynamically -->
+                </select>
+                <i data-lucide="chevron-down" class="select-arrow"></i>
+              </div>
+            </div>
+
+            <!-- Stock Status Filter -->
+            <div class="control-group">
+              <label for="status-filter" class="control-label">Stock Status</label>
+              <div class="select-wrapper">
+                <select id="status-filter" class="form-control form-select">
+                  <option value="all">All Stock Levels</option>
+                  <option value="low">Low Stock (&lt; 10)</option>
+                  <option value="normal">Normal Stock (&ge; 10)</option>
+                </select>
+                <i data-lucide="chevron-down" class="select-arrow"></i>
+              </div>
+            </div>
+
+            <!-- Sort By -->
+            <div class="control-group">
+              <label for="sort-filter" class="control-label">Sort By</label>
+              <div class="select-wrapper">
+                <select id="sort-filter" class="form-control form-select">
+                  <option value="name-asc">Name (A &rarr; Z)</option>
+                  <option value="name-desc">Name (Z &rarr; A)</option>
+                  <option value="qty-asc">Quantity (Low &rarr; High)</option>
+                  <option value="qty-desc">Quantity (High &rarr; Low)</option>
+                  <option value="newest">Newest Added</option>
+                </select>
+                <i data-lucide="chevron-down" class="select-arrow"></i>
+              </div>
+            </div>
+
+            <!-- Reset Filters Button -->
+            <div class="control-group control-btn-group">
+              <button class="btn btn-outline" id="reset-filters-btn" title="Reset all search and filters">
+                <i data-lucide="rotate-ccw"></i>
+                <span>Reset</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Active Filter Chips Bar -->
+          <div class="active-filters-bar hidden" id="active-filters-bar">
+            <span class="active-filters-label">Active Filters:</span>
+            <div class="filter-chips-list" id="filter-chips-list"></div>
+            <button class="btn-clear-all" id="btn-clear-all-filters">Clear all</button>
+          </div>
+        </section>
+
+        <!-- Inventory List / Table Container -->
+        <section class="inventory-section">
+          
+          <div class="inventory-card">
+            
+            <div class="inventory-card-header">
+              <div class="header-info">
+                <h2 class="section-title">Mall Stock Records</h2>
+                <span class="results-count" id="results-count">Showing 0 items</span>
+              </div>
+              <div class="header-actions">
+                <button class="btn btn-sm btn-outline" id="btn-export-csv" title="Download mall inventory list as CSV">
+                  <i data-lucide="download"></i>
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Data Table (Desktop & Tablet) -->
+            <div class="table-responsive desktop-table-wrapper" id="table-wrapper">
+              <table class="inventory-table" id="inventory-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="th-item">Item Name</th>
+                    <th scope="col" class="th-category">Mall Category</th>
+                    <th scope="col" class="th-location">Mall Location / Store</th>
+                    <th scope="col" class="th-quantity text-right">Quantity</th>
+                    <th scope="col" class="th-unit">Unit</th>
+                    <th scope="col" class="th-status">Status</th>
+                    <th scope="col" class="th-actions text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-tbody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Cards Container (Shown on Phone Screens - No Horizontal Scroll) -->
+            <div class="mobile-cards-container" id="mobile-cards-wrapper" aria-label="Mobile Inventory List">
+              <!-- Populated by JavaScript for phone view -->
+            </div>
+
+            <!-- Empty State Display -->
+            <div class="empty-state hidden" id="empty-state">
+              <div class="empty-state-icon">
+                <i data-lucide="package-search"></i>
+              </div>
+              <h3 class="empty-state-title" id="empty-state-title">No mall inventory items found</h3>
+              <p class="empty-state-text" id="empty-state-text">
+                Your shopping mall inventory list is currently empty. Add your first item to start tracking stock or load sample mall items.
+              </p>
+              <div class="empty-state-actions" id="empty-state-actions">
+                <button class="btn btn-primary" id="empty-add-btn">
+                  <i data-lucide="plus"></i>
+                  <span>Add First Item</span>
+                </button>
+                <button class="btn btn-outline" id="empty-seed-btn">
+                  <i data-lucide="store"></i>
+                  <span>Load Sample Mall Data</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+      <!-- App Footer -->
+      <footer class="app-footer">
+        <p>MallPilot Central Mall Inventory System &bull; Local Browser Storage</p>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- Modal: Add / Edit Inventory Item -->
+  <div class="modal-backdrop hidden" id="item-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">
+            <i data-lucide="package-plus" id="modal-header-icon"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" id="modal-title">Add Mall Inventory Item</h3>
+            <p class="modal-subtitle">Enter item details, stock quantity and mall store / location</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close dialog">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <form id="item-form" novalidate autocomplete="off">
+        <div class="modal-body">
+          
+          <!-- Hidden Item ID for Edit mode -->
+          <input type="hidden" id="form-item-id" value="">
+
+          <!-- Item Name -->
+          <div class="form-field">
+            <label for="form-item-name" class="form-label required">Item Name</label>
+            <input 
+              type="text" 
+              id="form-item-name" 
+              class="form-control" 
+              placeholder="e.g., Blender, Television, Cowbell Chocolate, Dove Soap" 
+              required
+            >
+            <span class="field-error" id="error-item-name"></span>
+          </div>
+
+          <!-- Category & Location Row -->
+          <div class="form-row">
+            
+            <div class="form-field">
+              <label for="form-item-category" class="form-label required">Mall Category</label>
+              <div class="select-wrapper">
+                <select id="form-item-category" class="form-control form-select" required>
+                  <option value="" disabled selected>Select category...</option>
+                  <option value="Electronics & Appliances">Electronics & Appliances</option>
+                  <option value="Home & Kitchen">Home & Kitchen</option>
+                  <option value="Fashion & Clothing">Fashion & Clothing</option>
+                  <option value="Groceries & Provisions">Groceries & Provisions</option>
+                  <option value="Baby & Kids">Baby & Kids</option>
+                  <option value="Health & Beauty">Health & Beauty</option>
+                  <option value="Beverages & Drinks">Beverages & Drinks</option>
+                  <option value="Mall Facilities & Supplies">Mall Facilities & Supplies</option>
+                  <option value="custom">+ Custom Category...</option>
+                </select>
+                <i data-lucide="chevron-down" class="select-arrow"></i>
+              </div>
+              <input 
+                type="text" 
+                id="form-item-custom-category" 
+                class="form-control form-control-secondary hidden" 
+                placeholder="Type custom mall category..."
+              >
+              <span class="field-error" id="error-item-category"></span>
+            </div>
+
+            <div class="form-field">
+              <label for="form-item-location" class="form-label required">Mall Location / Store</label>
+              <input 
+                type="text" 
+                id="form-item-location" 
+                class="form-control" 
+                placeholder="e.g., Ground Floor &bull; Supermarket Aisle 3" 
+                required
+              >
+              <span class="field-error" id="error-item-location"></span>
+            </div>
+
+          </div>
+
+          <!-- Quantity & Unit of Measurement Row -->
+          <div class="form-row">
+            
+            <div class="form-field">
+              <label for="form-item-quantity" class="form-label required">Quantity in Stock</label>
+              <div class="quantity-input-wrapper">
+                <input 
+                  type="number" 
+                  id="form-item-quantity" 
+                  class="form-control" 
+                  placeholder="0" 
+                  min="0" 
+                  step="1" 
+                  required
+                >
+              </div>
+              <span class="field-error" id="error-item-quantity"></span>
+            </div>
+
+            <div class="form-field">
+              <label for="form-item-unit" class="form-label required">Unit of Measurement</label>
+              <div class="select-wrapper">
+                <select id="form-item-unit" class="form-control form-select" required>
+                  <option value="" disabled selected>Select unit...</option>
+                  <option value="pcs">Pieces (pcs)</option>
+                  <option value="box">Boxes (box)</option>
+                  <option value="units">Units (units)</option>
+                  <option value="packs">Packs (packs)</option>
+                  <option value="rolls">Rolls (rolls)</option>
+                  <option value="sets">Sets (sets)</option>
+                  <option value="pairs">Pairs (pairs)</option>
+                  <option value="bottles">Bottles (btl)</option>
+                  <option value="cartons">Cartons (ctn)</option>
+                  <option value="custom">+ Custom Unit...</option>
+                </select>
+                <i data-lucide="chevron-down" class="select-arrow"></i>
+              </div>
+              <input 
+                type="text" 
+                id="form-item-custom-unit" 
+                class="form-control form-control-secondary hidden" 
+                placeholder="e.g., pallets, drums..."
+              >
+              <span class="field-error" id="error-item-unit"></span>
+            </div>
+
+          </div>
+
+          <!-- Low Stock Threshold Notice -->
+          <div class="form-notice">
+            <i data-lucide="info"></i>
+            <span>Items with quantities lower than <strong>10 units</strong> will automatically display a high-visibility low-stock warning flag.</span>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modal-submit-btn">
+            <i data-lucide="check"></i>
+            <span id="modal-submit-label">Save Item</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Delete Confirmation -->
+  <div class="modal-backdrop hidden" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon danger">
+            <i data-lucide="trash-2"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" id="delete-title">Confirm Deletion</h3>
+            <p class="modal-subtitle">Permanent mall record removal</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="delete-modal-close-btn" aria-label="Close dialog">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="confirm-message">
+          Are you sure you want to delete <strong id="delete-item-name" class="highlight-target"></strong>?
+        </p>
+
+        <div class="delete-item-preview">
+          <div class="preview-row">
+            <span class="preview-label">Category:</span>
+            <span class="preview-val" id="delete-item-category">-</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Location / Store:</span>
+            <span class="preview-val" id="delete-item-location">-</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Current Stock:</span>
+            <span class="preview-val" id="delete-item-qty">-</span>
+          </div>
+        </div>
+
+        <p class="delete-warning-text">
+          <i data-lucide="alert-circle"></i>
+          <span>This action cannot be undone. The item will be deleted from your mall inventory.</span>
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="delete-cancel-btn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="delete-confirm-btn">
+          <i data-lucide="trash-2"></i>
+          <span>Delete Item</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- App Script -->
+  <script src="script.js"></script>
+</body>
+</html>
